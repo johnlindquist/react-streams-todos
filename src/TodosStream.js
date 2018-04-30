@@ -1,5 +1,4 @@
 import React from "react"
-import L from "partial.lenses"
 import { pipeProps, source } from "react-streams"
 import {
   combineLatest,
