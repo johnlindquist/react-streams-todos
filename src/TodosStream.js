@@ -1,17 +1,12 @@
-import React from "react"
 import { pipeProps, source } from "react-streams"
 import {
   switchMap,
-  mergeMap,
-  mergeScan,
-  startWith,
   pluck,
   map,
   mapTo,
   scan,
   tap,
   concatMap,
-  share,
   withLatestFrom
 } from "rxjs/operators"
 import { ajax } from "rxjs/ajax"
