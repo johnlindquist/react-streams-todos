@@ -34,8 +34,7 @@ const App = () => (
                       <form
                         style={{
                           display: "flex",
-                          width: "50%",
-                          justifyContent: "space-between"
+                          width: "50%"
                         }}
                         onSubmit={e => {
                           toggleEdit(e)
@@ -48,6 +47,7 @@ const App = () => (
                           onChange={update}
                           onBlur={toggleEdit}
                           autoFocus
+                          style={{ flex: 1 }}
                         />
                         <input type="submit" />
                       </form>

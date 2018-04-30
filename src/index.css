@@ -3,3 +3,13 @@ body {
   margin: 0;
   font-family: "Avenir", sans-serif;
 }
+
+input[type="submit"],
+button {
+  border: 1px solid black;
+}
+
+input[type="submit"]:hover,
+button:hover {
+  background-color: lightblue;
+}
