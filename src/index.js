@@ -11,10 +11,18 @@ class App extends Component {
   render() {
     return (
       <TodosStream endpoint={endpoint}>
-        {({ todos, setTodo, addTodo, toggleDone, deleteTodo, patchTodo }) => (
+        {({
+          todos,
+          current,
+          setTodo,
+          addTodo,
+          toggleDone,
+          deleteTodo,
+          patchTodo
+        }) => (
           <div style={{ padding: "2rem" }}>
             <form onSubmit={addTodo}>
-              <input type="text" onBlur={setTodo} />
+              <input type="text" onChange={setTodo} value={current} />
               <input type="submit" value="Add Todo" />
             </form>
             <h3>Click a Todo to Edit</h3>
@@ -49,14 +57,24 @@ class App extends Component {
                           <div
                             style={{
                               display: "flex",
-                              width: "50%",
-                              justifyContent: "space-between"
+                              width: "50%"
                             }}
                           >
-                            <span onClick={toggleEdit}>{todo.text}</span>
+                            <span
+                              style={{
+                                flex: 1,
+                                textDecoration: todo.done
+                                  ? "line-through"
+                                  : null
+                              }}
+                              onClick={toggleEdit}
+                            >
+                              {todo.text}
+                            </span>
                             <button onClick={e => toggleDone(todo)}>
                               Done
                             </button>
+                            <button onClick={e => deleteTodo(todo)}>X</button>
                           </div>
                         )}
                       </li>
