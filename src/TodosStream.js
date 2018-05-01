@@ -77,11 +77,13 @@ export default streamProps(({ endpoint }) => {
     patchTodoAction
   ])
 
-  const handlers = { toggleDone, setTodo, addTodo, deleteTodo, patchTodo }
-
   return {
     todos: todosAndActions$,
     current: current$,
-    ...handlers
+    toggleDone,
+    setTodo,
+    addTodo,
+    deleteTodo,
+    patchTodo
   }
 })
