@@ -1,21 +1,20 @@
 import { pipeProps, source } from "react-streams"
+import { concat, from, merge, of } from "rxjs"
+import { ajax } from "rxjs/ajax"
 import {
-  switchMap,
-  pluck,
-  map,
-  mapTo,
-  scan,
-  tap,
   concatMap,
+  mapTo,
+  pluck,
+  switchMap,
+  tap,
   withLatestFrom
 } from "rxjs/operators"
-import { ajax } from "rxjs/ajax"
-import { combineLatest, from, merge, concat, of } from "rxjs"
+import { action, mapProps, streamActions } from "./helpers"
 
 const HEADERS = { "Content-Type": "application/json" }
 
 export default pipeProps(
-  switchMap(({ endpoint }) => {
+  mapProps(({ endpoint }) => {
     const setTodo = source(pluck("target", "value"))
 
     const addTodo = source(
@@ -24,8 +23,7 @@ export default pipeProps(
       concatMap(text =>
         ajax.post(`${endpoint}`, { text, done: false }, HEADERS)
       ),
-      pluck("response"),
-      map(todo => todos => [...todos, todo])
+      pluck("response")
     )
 
     const current$ = concat(
@@ -44,8 +42,7 @@ export default pipeProps(
           HEADERS
         )
       ),
-      pluck("response"),
-      map(todo => todos => todos.map(t => (t.id === todo.id ? todo : t)))
+      pluck("response")
     )
 
     const filterById = id => xs => xs.filter(x => x.id !== id)
@@ -63,23 +60,36 @@ export default pipeProps(
           "Content-Type": "application/json"
         })
       ),
-      pluck("response"),
-      map(todo => todos => todos.map(t => (t.id === todo.id ? todo : t)))
+      pluck("response")
     )
 
     const todos$ = of(`${endpoint}`).pipe(switchMap(ajax), pluck("response"))
 
-    const todosAndActions$ = concat(
-      todos$,
-      merge(toggleDone, addTodo, deleteTodo, patchTodo)
-    ).pipe(scan((todos, fn) => fn(todos)))
+    //pair "handlers" to functions
+    const toggleDoneAction = action(toggleDone, todo => todos =>
+      todos.map(t => (t.id === todo.id ? todo : t))
+    )
+
+    const addTodoAction = action(addTodo, todo => todos => [...todos, todo])
+
+    const patchTodoAction = action(patchTodo, todo => todos =>
+      todos.map(t => (t.id === todo.id ? todo : t))
+    )
+
+    // Can this be expressed better?
+    const todosAndActions$ = streamActions(todos$, [
+      toggleDoneAction,
+      addTodoAction,
+      deleteTodo,
+      patchTodoAction
+    ])
 
     const handlers = { toggleDone, setTodo, addTodo, deleteTodo, patchTodo }
 
-    return combineLatest(todosAndActions$, current$, (todos, current) => ({
-      todos,
-      current,
+    return {
+      todos: todosAndActions$,
+      current: current$,
       ...handlers
-    })).pipe(tap(console.log.bind(console)))
+    }
   })
 )

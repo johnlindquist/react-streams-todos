@@ -1,9 +1,10 @@
-import { source, pipeProps } from "react-streams/dist"
-import { tap, pluck, scan, switchMap } from "rxjs/operators"
-import { concat, of, combineLatest } from "rxjs"
+import { pipeProps, source } from "react-streams/dist"
+import { concat, of } from "rxjs"
+import { pluck, scan, tap } from "rxjs/operators"
+import { mapProps } from "./helpers"
 
 export default pipeProps(
-  switchMap(({ todo }) => {
+  mapProps(({ todo }) => {
     const toggleEdit = source(tap(e => e.preventDefault()))
     const update = source(pluck("target", "value"))
 
@@ -13,11 +14,11 @@ export default pipeProps(
 
     const isEditing$ = concat(of(false), toggleEdit).pipe(scan(prev => !prev))
 
-    return combineLatest(todo$, isEditing$, (todo, isEditing) => ({
-      todo,
-      isEditing,
+    return {
+      todo: todo$,
+      isEditing: isEditing$,
       update,
       toggleEdit
-    }))
+    }
   })
 )
