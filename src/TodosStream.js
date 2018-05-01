@@ -38,13 +38,8 @@ export default streamProps(({ endpoint }) => {
     pluck("response")
   )
 
-  const filterById = id => xs => xs.filter(x => x.id !== id)
-
   const deleteTodo = source(
-    concatMap(todo => {
-      const filterTodos = filterById(todo.id)
-      return ajax.delete(`${endpoint}/${todo.id}`).pipe(mapTo(filterTodos))
-    })
+    concatMap(todo => ajax.delete(`${endpoint}/${todo.id}`).pipe(mapTo(todo)))
   )
 
   const patchTodo = source(
@@ -58,23 +53,16 @@ export default streamProps(({ endpoint }) => {
 
   const todos$ = of(`${endpoint}`).pipe(switchMap(ajax), pluck("response"))
 
-  //pair "handlers" to functions
-  const toggleDoneAction = action(toggleDone, todo => todos =>
-    todos.map(t => (t.id === todo.id ? todo : t))
-  )
-
-  const addTodoAction = action(addTodo, todo => todos => [...todos, todo])
-
-  const patchTodoAction = action(patchTodo, todo => todos =>
-    todos.map(t => (t.id === todo.id ? todo : t))
-  )
-
   // Can this be expressed better?
   const todosAndActions$ = streamActions(todos$, [
-    toggleDoneAction,
-    addTodoAction,
-    deleteTodo,
-    patchTodoAction
+    action(toggleDone, todo => todos =>
+      todos.map(t => (t.id === todo.id ? todo : t))
+    ),
+    action(addTodo, todo => todos => [...todos, todo]),
+    action(patchTodo, todo => todos =>
+      todos.map(t => (t.id === todo.id ? todo : t))
+    ),
+    action(deleteTodo, todo => todos => todos.filter(t => t.id !== todo.id))
   ])
 
   return {
