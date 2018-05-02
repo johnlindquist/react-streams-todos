@@ -14,11 +14,10 @@ const AddTodoForm = ({ addTodo, setTodo, current }) => (
   </form>
 )
 
-const EditTodo = ({ todo, update, toggleEdit, patchTodo }) => (
+const EditTodo = ({ todo, update, toggleEdit, patchTodo, cancel }) => (
   <form
     style={{
-      display: "flex",
-      width: "50%"
+      display: "flex"
     }}
     onSubmit={e => {
       toggleEdit(e)
@@ -29,7 +28,7 @@ const EditTodo = ({ todo, update, toggleEdit, patchTodo }) => (
       type="text"
       value={todo.text}
       onChange={update}
-      onBlur={toggleEdit}
+      onKeyDown={e => (e.key === "Escape" ? cancel(e) : null)}
       autoFocus
       style={{ flex: 1 }}
     />
@@ -40,8 +39,7 @@ const EditTodo = ({ todo, update, toggleEdit, patchTodo }) => (
 const DisplayTodo = ({ todo, toggleDone, toggleEdit, deleteTodo }) => (
   <div
     style={{
-      display: "flex",
-      width: "50%"
+      display: "flex"
     }}
   >
     <span
@@ -65,12 +63,13 @@ const Todo = ({
   toggleEdit,
   patchTodo,
   toggleDone,
-  deleteTodo
+  deleteTodo,
+  cancel
 }) => {
-  const editTodoProps = { todo, update, toggleEdit, patchTodo }
+  const editTodoProps = { todo, update, toggleEdit, patchTodo, cancel }
   const displayTodoProps = { todo, toggleDone, toggleEdit, deleteTodo }
   return (
-    <li>
+    <li style={{ width: "200px" }}>
       {isEditing ? (
         <EditTodo {...editTodoProps} />
       ) : (
