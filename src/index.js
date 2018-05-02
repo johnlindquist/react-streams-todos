@@ -12,6 +12,7 @@ const AddTodoForm = ({ onAddTodo, onSetTodo, current }) => (
     onSubmit={onAddTodo}
   >
     <input
+      aria-label="Add Todo"
       style={{ flex: "1" }}
       type="text"
       onChange={onSetTodo}
