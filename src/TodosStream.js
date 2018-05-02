@@ -1,4 +1,11 @@
-import { action, source, streamActions, streamProps } from "react-streams"
+import {
+  action,
+  handler,
+  streamActions,
+  streamProps,
+  preventDefault,
+  getTargetValue
+} from "react-streams"
 import { concat, from, merge, of } from "rxjs"
 import { ajax } from "rxjs/ajax"
 import {
@@ -6,25 +13,27 @@ import {
   mapTo,
   pluck,
   switchMap,
-  tap,
   withLatestFrom
 } from "rxjs/operators"
 
 const HEADERS = { "Content-Type": "application/json" }
 
 export default streamProps(({ endpoint }) => {
-  const setTodo = source(pluck("target", "value"))
+  const onSetTodo = handler(getTargetValue)
 
-  const addTodo = source(
-    tap(e => e.preventDefault()),
-    withLatestFrom(setTodo, (e, text) => text),
+  const onAddTodo = handler(
+    preventDefault,
+    withLatestFrom(onSetTodo, (e, text) => text),
     concatMap(text => ajax.post(`${endpoint}`, { text, done: false }, HEADERS)),
     pluck("response")
   )
 
-  const current$ = concat(of(""), merge(setTodo, from(addTodo).pipe(mapTo(""))))
+  const current$ = concat(
+    of(""),
+    merge(onSetTodo, from(onAddTodo).pipe(mapTo("")))
+  )
 
-  const toggleDone = source(
+  const onToggleDone = handler(
     concatMap(todo =>
       ajax.patch(
         `${endpoint}/${todo.id}`,
@@ -38,40 +47,27 @@ export default streamProps(({ endpoint }) => {
     pluck("response")
   )
 
-  const deleteTodo = source(
+  const onDeleteTodo = handler(
     concatMap(todo => ajax.delete(`${endpoint}/${todo.id}`).pipe(mapTo(todo)))
-  )
-
-  const patchTodo = source(
-    concatMap(todo =>
-      ajax.patch(`${endpoint}/${todo.id}`, todo, {
-        "Content-Type": "application/json"
-      })
-    ),
-    pluck("response")
   )
 
   const todos$ = of(`${endpoint}`).pipe(switchMap(ajax), pluck("response"))
 
   // Can this be expressed better?
   const todosAndActions$ = streamActions(todos$, [
-    action(toggleDone, todo => todos =>
+    action(onToggleDone, todo => todos =>
       todos.map(t => (t.id === todo.id ? todo : t))
     ),
-    action(addTodo, todo => todos => [...todos, todo]),
-    action(patchTodo, todo => todos =>
-      todos.map(t => (t.id === todo.id ? todo : t))
-    ),
-    action(deleteTodo, todo => todos => todos.filter(t => t.id !== todo.id))
+    action(onAddTodo, todo => todos => [...todos, todo]),
+    action(onDeleteTodo, todo => todos => todos.filter(t => t.id !== todo.id))
   ])
 
   return {
     todos: todosAndActions$,
     current: current$,
-    toggleDone,
-    setTodo,
-    addTodo,
-    deleteTodo,
-    patchTodo
+    onToggleDone,
+    onSetTodo,
+    onAddTodo,
+    onDeleteTodo
   }
 })
